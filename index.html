@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+    <title>StarBears — Магазин в Telegram</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            transition: background 0.25s ease, color 0.2s ease;
+            padding-bottom: 80px;
+        }
+        /* Light / Dark */
+        :root {
+            --bg-primary: #f8f9fc;
+            --bg-secondary: #ffffff;
+            --card: #ffffff;
+            --border: #eef2f8;
+            --text-primary: #1a1f2e;
+            --text-secondary: #6c7a8e;
+            --accent: #007aff;
+            --accent-soft: #eef5ff;
+            --danger: #ff3b30;
+            --success: #34c759;
+            --warning: #ff9f0a;
+            --star: #ffb340;
+            --shadow-sm: 0 4px 12px rgba(0,0,0,0.04);
+            --shadow-md: 0 8px 24px rgba(0,0,0,0.08);
+            --tabbar: rgba(255,255,255,0.96);
+        }
+        body.dark {
+            --bg-primary: #000000;
+            --bg-secondary: #121212;
+            --card: #1c1c1e;
+            --border: #2c2c2e;
+            --text-primary: #ffffff;
+            --text-secondary: #8e8e93;
+            --accent: #0a84ff;
+            --accent-soft: #1c2c3a;
+            --shadow-sm: 0 4px 12px rgba(0,0,0,0.3);
+            --shadow-md: 0 8px 24px rgba(0,0,0,0.5);
+            --tabbar: #121212dd;
+        }
+        /* Bottom Tab Bar */
+        .bottom-tab-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--tabbar);
+            backdrop-filter: blur(20px);
+            border-top: 0.5px solid var(--border);
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 16px 18px;
+            z-index: 100;
+        }
+        .tab-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 6px 0;
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            border-radius: 28px;
+            transition: 0.2s;
+            cursor: pointer;
+        }
+        .tab-item i { font-size: 22px; }
+        .tab-item.active {
+            color: var(--accent);
+            background: var(--accent-soft);
+            font-weight: 600;
+        }
+        .main-container {
+            max-width: 560px;
+            margin: 0 auto;
+            padding: 20px 16px 32px;
+        }
+        .brand {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+        .brand h1 {
+            font-size: 34px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #FF9A44, #FF3B6F);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .stars-badge {
+            background: var(--card);
+            padding: 6px 14px;
+            border-radius: 40px;
+            font-size: 14px;
+            font-weight: 600;
+            box-shadow: var(--shadow-sm);
+        }
+        .stars-badge i { color: var(--star); margin-right: 6px; }
+        /* Products */
+        .products-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+        .product-card {
+            background: var(--card);
+            border-radius: 32px;
+            padding: 16px 18px;
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            box-shadow: var(--shadow-sm);
+            border: 0.5px solid var(--border);
+            transition: 0.25s;
+            animation: fadeSlideUp 0.35s ease;
+        }
+        @keyframes fadeSlideUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .product-icon { font-size: 56px; width: 72px; text-align: center; }
+        .product-info { flex: 1; }
+        .product-name { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+        .stock-badge {
+            font-size: 13px;
+            background: var(--bg-primary);
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 40px;
+            margin: 6px 0;
+        }
+        .price {
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: var(--accent-soft);
+            padding: 5px 14px;
+            border-radius: 40px;
+            color: var(--accent);
+        }
+        .buy-btn {
+            background: var(--accent);
+            border: none;
+            color: white;
+            font-weight: 600;
+            padding: 12px 20px;
+            border-radius: 40px;
+            font-size: 15px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .buy-btn:active { transform: scale(0.96); }
+        .buy-btn.disabled {
+            background: #8e8e93;
+            opacity: 0.5;
+            pointer-events: none;
+        }
+        /* Modal (выбор оплаты) */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .payment-modal {
+            background: var(--card);
+            border-radius: 44px;
+            max-width: 340px;
+            width: 100%;
+            padding: 28px 24px;
+            box-shadow: var(--shadow-md);
+            animation: fadeSlideUp 0.25s;
+        }
+        .payment-modal h3 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .payment-method {
+            background: var(--bg-primary);
+            border-radius: 32px;
+            padding: 16px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            cursor: pointer;
+            border: 1px solid var(--border);
+        }
+        .payment-method.selected {
+            border-color: var(--accent);
+            background: var(--accent-soft);
+        }
+        .radio-circle {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            border: 2px solid var(--text-secondary);
+            background: transparent;
+            transition: 0.1s;
+        }
+        .payment-method.selected .radio-circle {
+            border-color: var(--accent);
+            background: var(--accent);
+            box-shadow: inset 0 0 0 4px var(--card);
+        }
+        .method-icon {
+            font-size: 28px;
+        }
+        .method-name {
+            font-weight: 600;
+            font-size: 17px;
+        }
+        .username-input {
+            width: 100%;
+            padding: 14px 16px;
+            border-radius: 44px;
+            border: 1px solid var(--border);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+        .username-input:focus { outline: none; border-color: var(--accent); }
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 8px;
+        }
+        .modal-btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 44px;
+            font-weight: 600;
+            border: none;
+            background: var(--accent);
+            color: white;
+            cursor: pointer;
+        }
+        .modal-btn.cancel {
+            background: var(--text-secondary);
+        }
+        .error-text {
+            color: var(--danger);
+            font-size: 13px;
+            margin-top: -12px;
+            margin-bottom: 12px;
+        }
+        /* Receipts */
+        .receipt-list { display: flex; flex-direction: column; gap: 14px; }
+        .receipt-card {
+            background: var(--card);
+            border-radius: 28px;
+            padding: 18px;
+            border-left: 4px solid var(--accent);
+            box-shadow: var(--shadow-sm);
+        }
+        .receipt-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+        .receipt-name { font-weight: 700; font-size: 18px; }
+        .receipt-status {
+            padding: 4px 12px;
+            border-radius: 30px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .status-pending { background: var(--warning); color: #000; }
+        .status-cancelled { background: var(--danger); color: white; }
+        .status-delivered { background: var(--success); color: white; }
+        .receipt-stars { font-weight: 700; color: var(--star); margin: 6px 0; }
+        .receipt-username {
+            font-size: 13px;
+            color: var(--text-secondary);
+            background: var(--bg-primary);
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 30px;
+            margin-bottom: 8px;
+        }
+        .receipt-message {
+            font-size: 13px;
+            color: var(--text-secondary);
+            background: var(--bg-primary);
+            padding: 12px;
+            border-radius: 20px;
+            margin-top: 12px;
+        }
+        .receipt-date { font-size: 11px; color: var(--text-secondary); margin-top: 8px; }
+        .empty-state { text-align: center; padding: 48px 20px; color: var(--text-secondary); }
+        /* Settings & Admin */
+        .settings-card {
+            background: var(--card);
+            border-radius: 32px;
+            padding: 24px;
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 20px;
+        }
+        .theme-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 20px;
+            border-bottom: 0.5px solid var(--border);
+            margin-bottom: 20px;
+        }
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 52px;
+            height: 28px;
+        }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .slider-round {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #ccc;
+            transition: 0.2s;
+            border-radius: 34px;
+        }
+        .slider-round:before {
+            position: absolute;
+            content: "";
+            height: 24px;
+            width: 24px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: 0.2s;
+            border-radius: 50%;
+        }
+        input:checked + .slider-round { background-color: var(--accent); }
+        input:checked + .slider-round:before { transform: translateX(24px); }
+        .promo-box {
+            background: var(--bg-primary);
+            border-radius: 24px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+        .promo-input-group { display: flex; gap: 12px; }
+        .promo-input {
+            flex: 1;
+            padding: 14px 18px;
+            border-radius: 44px;
+            border: 1px solid var(--border);
+            background: var(--card);
+            color: var(--text-primary);
+        }
+        .promo-btn {
+            background: var(--accent);
+            border: none;
+            padding: 0 24px;
+            border-radius: 44px;
+            font-weight: 600;
+            color: white;
+            cursor: pointer;
+        }
+        .admin-panel {
+            background: var(--bg-primary);
+            border-radius: 28px;
+            padding: 20px;
+            margin-top: 16px;
+            border: 1px solid var(--accent);
+        }
+        .admin-title { font-weight: 700; font-size: 18px; margin-bottom: 18px; display: flex; gap: 8px; align-items: center; }
+        .admin-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+            background: var(--card);
+            padding: 10px 16px;
+            border-radius: 60px;
+        }
+        .stock-input { width: 100px; padding: 8px; border-radius: 32px; border: 1px solid var(--border); text-align: center; }
+        .admin-save-btn { background: var(--success); border: none; padding: 6px 18px; border-radius: 40px; color: white; cursor: pointer; }
+        .receipts-admin-list { margin-top: 20px; max-height: 400px; overflow-y: auto; }
+        .admin-receipt-item {
+            background: var(--card);
+            border-radius: 20px;
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+        .receipt-status-select { padding: 6px; border-radius: 20px; background: var(--bg-primary); border: 1px solid var(--border); }
+        .toast-message {
+            position: fixed;
+            bottom: 90px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(12px);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 60px;
+            font-size: 14px;
+            z-index: 200;
+            animation: fadeInUp 0.2s;
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateX(-50%) translateY(10px);}
+            to { opacity: 1; transform: translateX(-50%) translateY(0);}
+        }
+        .hidden { display: none; }
+        footer { text-align: center; font-size: 12px; color: var(--text-secondary); margin-top: 24px; }
+    </style>
+</head>
+<body>
+<div class="main-container">
+    <div class="brand">
+        <h1>🐻 StarBears</h1>
+        <div class="stars-badge"><i class="fas fa-star"></i> Telegram Stars</div>
+    </div>
+    <div id="shopPanel" class="tab-panel"><div class="products-grid" id="productsGrid"></div></div>
+    <div id="receiptsPanel" class="tab-panel" style="display:none;"><div id="receiptsList" class="receipt-list"></div></div>
+    <div id="settingsPanel" class="tab-panel" style="display:none;">
+        <div class="settings-card">
+            <div class="theme-row"><span><i class="fas fa-moon"></i> Тёмная тема</span><label class="toggle-switch"><input type="checkbox" id="darkModeToggle"><span class="slider-round"></span></label></div>
+            <div class="promo-box">
+                <div class="promo-input-group"><input type="text" id="promoInput" class="promo-input" placeholder="Промокод / Код доступа"><button id="activatePromo" class="promo-btn">Активировать</button></div>
+                <div id="promoFeedback" style="font-size:13px; margin-top:10px;"></div>
+            </div>
+            <div id="adminWrapper" class="hidden"></div>
+        </div>
+        <footer>⭐ Оплата реальными Telegram Stars. По вопросам: @yecry</footer>
+    </div>
+</div>
+<div class="bottom-tab-bar">
+    <div class="tab-item" data-tab="shop"><i class="fas fa-store"></i><span>Магазин</span></div>
+    <div class="tab-item" data-tab="receipts"><i class="fas fa-receipt"></i><span>Чеки</span></div>
+    <div class="tab-item" data-tab="settings"><i class="fas fa-sliders-h"></i><span>Настройки</span></div>
+</div>
+
+<script>
+    const BOT_TOKEN = "8881953646:AAFBCgqEWipdR-1wECRlrghV8GUDFPw0INE";
+    const tg = window.Telegram?.WebApp;
+    if (tg) { tg.ready(); tg.expand(); tg.enableClosingConfirmation(); }
+
+    const PRODUCTS = {
+        bear: { id: 'bear', name: '🧸 Мишка', price: 13, icon: '🧸' },
+        heart: { id: 'heart', name: '❤️ Сердечко', price: 13, icon: '❤️' },
+        diamond: { id: 'diamond', name: '💎 Бриллиант', price: 97, icon: '💎' }
+    };
+    let stocks = { bear: 0, heart: 0, diamond: 0 };
+    let purchases = [];
+    let isAdmin = false;
+
+    function loadData() {
+        const s = localStorage.getItem('starbears_stocks');
+        if (s) stocks = JSON.parse(s);
+        else stocks = { bear: 0, heart: 0, diamond: 0 };
+        const p = localStorage.getItem('starbears_purchases');
+        if (p) purchases = JSON.parse(p);
+        const a = localStorage.getItem('starbears_admin');
+        if (a === 'true') isAdmin = true;
+    }
+    function saveStocks() { localStorage.setItem('starbears_stocks', JSON.stringify(stocks)); }
+    function savePurchases() { localStorage.setItem('starbears_purchases', JSON.stringify(purchases)); }
+    function saveAdmin() { localStorage.setItem('starbears_admin', isAdmin); }
+
+    function addReceipt(productId, productName, price, username, payload) {
+        const newReceipt = {
+            id: Date.now() + Math.random(),
+            productId,
+            productName,
+            price,
+            username: username,
+            date: new Date().toLocaleString('ru-RU'),
+            status: "pending",
+            invoicePayload: payload
+        };
+        purchases.unshift(newReceipt);
+        savePurchases();
+        renderReceipts();
+        return newReceipt;
+    }
+
+    function updateReceiptStatus(receiptId, newStatus) {
+        const idx = purchases.findIndex(r => r.id == receiptId);
+        if (idx !== -1) {
+            purchases[idx].status = newStatus;
+            savePurchases();
+            renderReceipts();
+            renderAdminPanel();
+        }
+    }
+
+    async function createStarInvoice(product, username) {
+        const title = `${product.name} — StarBears`;
+        const description = `Покупка ${product.name} за ${product.price} Telegram Stars. Юзернейм: ${username}. После оплаты товар будет выдан в течение 48 часов.`;
+        const payload = `purchase_${product.id}_${Date.now()}_${username.replace('@','')}`;
+        const prices = [{ label: product.name, amount: product.price }];
+        const invoiceParams = {
+            title, description, payload,
+            provider_token: "",
+            currency: "XTR",
+            prices: prices,
+            need_shipping_address: false,
+            send_phone_number_to_provider: false,
+            send_email_to_provider: false,
+            is_flexible: false
+        };
+        try {
+            const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/createInvoiceLink`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(invoiceParams)
+            });
+            const data = await response.json();
+            if (data.ok && data.result) {
+                return { ok: true, invoiceLink: data.result, payload };
+            } else {
+                return { ok: false, error: data.description };
+            }
+        } catch (err) {
+            return { ok: false, error: err.message };
+        }
+    }
+
+    function showPaymentModal(product) {
+        const existing = document.querySelector('.modal-overlay');
+        if (existing) existing.remove();
+        const modalDiv = document.createElement('div');
+        modalDiv.className = 'modal-overlay';
+        modalDiv.innerHTML = `
+            <div class="payment-modal">
+                <h3>Оплата</h3>
+                <div class="payment-method selected" id="starsMethod">
+                    <div class="radio-circle"></div>
+                    <div class="method-icon"><i class="fas fa-star" style="color:var(--star);"></i></div>
+                    <div class="method-name">Telegram Stars (${product.price} ⭐)</div>
+                </div>
+                <input type="text" id="usernameInput" class="username-input" placeholder="Ваш Telegram username (с @)" value="@">
+                <div id="usernameError" class="error-text hidden"></div>
+                <div class="modal-buttons">
+                    <button id="confirmPayBtn" class="modal-btn">Оплатить</button>
+                    <button id="cancelPayBtn" class="modal-btn cancel">Отмена</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modalDiv);
+        const usernameField = document.getElementById('usernameInput');
+        const errorDiv = document.getElementById('usernameError');
+        document.getElementById('confirmPayBtn').onclick = async () => {
+            let username = usernameField.value.trim();
+            if (!username.startsWith('@')) {
+                errorDiv.innerText = 'Username должен начинаться с @';
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+            if (username.length < 2) {
+                errorDiv.innerText = 'Введите корректный username';
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+            errorDiv.classList.add('hidden');
+            if (stocks[product.id] <= 0) {
+                showToast(`❌ ${product.name} закончился. Админ может добавить остатки.`);
+                modalDiv.remove();
+                return;
+            }
+            showToast("⏳ Создание счёта...");
+            const inv = await createStarInvoice(product, username);
+            if (!inv.ok) {
+                showToast(`Ошибка: ${inv.error}`);
+                modalDiv.remove();
+                return;
+            }
+            if (tg && tg.openInvoice) {
+                tg.openInvoice(inv.invoiceLink);
+                tg.onEvent('invoiceClosed', async (eventData) => {
+                    if (eventData.status === 'paid') {
+                        if (stocks[product.id] <= 0) {
+                            showToast("Остатки изменились, но оплата прошла. Свяжитесь с админом @yecry");
+                            modalDiv.remove();
+                            return;
+                        }
+                        stocks[product.id]--;
+                        saveStocks();
+                        const receipt = addReceipt(product.id, product.name, product.price, username, inv.payload);
+                        renderShop();
+                        showReceiptAfterPurchase(receipt);
+                        switchToTab('receipts');
+                    } else {
+                        showToast(`Оплата не завершена (${eventData.status})`);
+                    }
+                    tg.offEvent('invoiceClosed');
+                    modalDiv.remove();
+                });
+            } else {
+                showToast("Telegram WebApp не поддерживает оплату.");
+                modalDiv.remove();
+            }
+        };
+        document.getElementById('cancelPayBtn').onclick = () => modalDiv.remove();
+        usernameField.focus();
+    }
+
+    function showReceiptAfterPurchase(receipt) {
+        const modalHtml = `
+            <div style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.7); backdrop-filter:blur(8px); z-index:1000; display:flex; align-items:center; justify-content:center; padding:20px;" id="receiptModal">
+                <div style="background:var(--card); border-radius:36px; max-width:340px; width:100%; padding:24px; text-align:center; box-shadow:0 20px 40px rgba(0,0,0,0.3);">
+                    <i class="fas fa-receipt" style="font-size:48px; color:var(--accent); margin-bottom:12px;"></i>
+                    <h3 style="margin-bottom:8px;">Чек №${receipt.id.toString().slice(-6)}</h3>
+                    <p style="font-weight:600;">${receipt.productName}</p>
+                    <p><i class="fas fa-star" style="color:var(--star);"></i> ${receipt.price} звезд</p>
+                    <p style="background:var(--bg-primary); border-radius:20px; padding:8px; margin:8px 0;">${receipt.username}</p>
+                    <div style="background:var(--bg-primary); border-radius:24px; padding:14px; margin:16px 0; font-size:13px; text-align:left;">
+                        Здравствуйте, спасибо за покупку в StarBears!<br>
+                        Пожалуйста, подождите ~48 часов, и мы выдадим вам товар.<br>
+                        Если вам не пришла мишка, пожалуйста, напишите админу (@yecry) с доказательствами.
+                    </div>
+                    <p style="font-size:12px;">Статус: <strong style="color:var(--warning);">На рассмотрении</strong></p>
+                    <button id="closeReceiptModal" style="background:var(--accent); border:none; padding:12px 24px; border-radius:40px; color:white; font-weight:600; margin-top:12px;">Закрыть</button>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        document.getElementById('closeReceiptModal').addEventListener('click', () => {
+            document.getElementById('receiptModal').remove();
+        });
+    }
+
+    function renderShop() {
+        const container = document.getElementById('productsGrid');
+        if (!container) return;
+        container.innerHTML = '';
+        for (const [id, prod] of Object.entries(PRODUCTS)) {
+            const stock = stocks[id];
+            const card = document.createElement('div');
+            card.className = 'product-card';
+            card.innerHTML = `
+                <div class="product-icon">${prod.icon}</div>
+                <div class="product-info">
+                    <div class="product-name">${prod.name}</div>
+                    <div class="stock-badge"><i class="fas fa-box"></i> В продаже: <strong>${stock}</strong> шт.</div>
+                    <div class="price"><i class="fas fa-star"></i> ${prod.price} звезд</div>
+                </div>
+                <button class="buy-btn ${stock <= 0 ? 'disabled' : ''}" data-id="${id}">${stock > 0 ? 'Купить' : 'Нет'}</button>
+            `;
+            container.appendChild(card);
+        }
+        document.querySelectorAll('.buy-btn:not(.disabled)').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const pid = btn.getAttribute('data-id');
+                if (pid && stocks[pid] > 0) {
+                    showPaymentModal(PRODUCTS[pid]);
+                }
+            });
+        });
+    }
+
+    function renderReceipts() {
+        const container = document.getElementById('receiptsList');
+        if (!container) return;
+        if (purchases.length === 0) {
+            container.innerHTML = `<div class="empty-state"><i class="fas fa-receipt" style="font-size:48px;"></i><p>У вас пока нет чеков</p><p style="font-size:13px;">Оплатите товар звездами</p></div>`;
+            return;
+        }
+        container.innerHTML = purchases.map(r => {
+            let statusText = '', statusClass = '';
+            if (r.status === 'pending') { statusText = 'На рассмотрении'; statusClass = 'status-pending'; }
+            else if (r.status === 'cancelled') { statusText = 'Отменено'; statusClass = 'status-cancelled'; }
+            else if (r.status === 'delivered') { statusText = 'Выдан'; statusClass = 'status-delivered'; }
+            return `
+                <div class="receipt-card">
+                    <div class="receipt-header">
+                        <span class="receipt-name">${r.productName}</span>
+                        <span class="receipt-status ${statusClass}">${statusText}</span>
+                    </div>
+                    <div class="receipt-stars"><i class="fas fa-star"></i> ${r.price} звезд</div>
+                    <div class="receipt-username"><i class="fab fa-telegram"></i> ${r.username || 'нет username'}</div>
+                    <div class="receipt-message">
+                        Здравствуйте, спасибо за покупку в StarBears!<br>
+                        Пожалуйста, подождите ~48 часов, и мы выдадим вам товар.<br>
+                        Если вам не пришла мишка, пожалуйста, напишите админу (@yecry) с доказательствами.
+                    </div>
+                    <div class="receipt-date"><i class="far fa-clock"></i> ${r.date}</div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function renderAdminPanel() {
+        const wrapper = document.getElementById('adminWrapper');
+        if (!wrapper) return;
+        if (!isAdmin) {
+            wrapper.classList.add('hidden');
+            wrapper.innerHTML = '';
+            return;
+        }
+        wrapper.classList.remove('hidden');
+        let stocksHtml = `<div class="admin-panel"><div class="admin-title"><i class="fas fa-cubes"></i> Управление остатками</div>`;
+        for (const [id, prod] of Object.entries(PRODUCTS)) {
+            stocksHtml += `
+                <div class="admin-row">
+                    <span>${prod.icon} ${prod.name}</span>
+                    <input type="number" id="admin_stock_${id}" class="stock-input" value="${stocks[id]}" min="0">
+                    <button class="admin-save-btn" data-id="${id}">Обновить</button>
+                </div>
+            `;
+        }
+        stocksHtml += `</div>`;
+        let receiptsHtml = `<div class="admin-panel" style="margin-top:20px;"><div class="admin-title"><i class="fas fa-list-ul"></i> Все чеки (управление статусами)</div><div class="receipts-admin-list">`;
+        if (purchases.length === 0) receiptsHtml += `<p style="padding:12px;">Нет чеков</p>`;
+        else {
+            purchases.forEach(r => {
+                receiptsHtml += `
+                    <div class="admin-receipt-item">
+                        <div><strong>${r.productName}</strong> — ${r.price} ⭐</div>
+                        <div style="font-size:12px;">${r.username || 'нет username'}</div>
+                        <div style="font-size:12px;">${r.date}</div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
+                            <select data-id="${r.id}" class="receipt-status-select">
+                                <option value="pending" ${r.status === 'pending' ? 'selected' : ''}>На рассмотрении</option>
+                                <option value="cancelled" ${r.status === 'cancelled' ? 'selected' : ''}>Отменено</option>
+                                <option value="delivered" ${r.status === 'delivered' ? 'selected' : ''}>Выдан</option>
+                            </select>
+                            <button class="admin-save-status" data-id="${r.id}" style="background:var(--accent); border:none; padding:6px 16px; border-radius:30px; color:white; cursor:pointer;">Изменить</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+        receiptsHtml += `</div></div>`;
+        wrapper.innerHTML = stocksHtml + receiptsHtml;
+        for (const [id] of Object.entries(PRODUCTS)) {
+            const btn = wrapper.querySelector(`.admin-save-btn[data-id="${id}"]`);
+            if (btn) {
+                btn.addEventListener('click', () => {
+                    const input = document.getElementById(`admin_stock_${id}`);
+                    let newVal = parseInt(input.value);
+                    if (isNaN(newVal)) newVal = 0;
+                    stocks[id] = Math.max(0, newVal);
+                    saveStocks();
+                    renderShop();
+                    renderAdminPanel();
+                    showToast(`Остаток ${PRODUCTS[id].name}: ${stocks[id]}`);
+                });
+            }
+        }
+        document.querySelectorAll('.admin-save-status').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const receiptId = parseFloat(btn.getAttribute('data-id'));
+                const select = document.querySelector(`.receipt-status-select[data-id="${receiptId}"]`);
+                if (select) {
+                    const newStatus = select.value;
+                    updateReceiptStatus(receiptId, newStatus);
+                    showToast(`Статус изменён на ${newStatus === 'pending' ? 'На рассмотрении' : newStatus === 'cancelled' ? 'Отменено' : 'Выдан'}`);
+                }
+            });
+        });
+    }
+
+    function switchToTab(tabName) {
+        document.querySelectorAll('.tab-panel').forEach(p => p.style.display = 'none');
+        if (tabName === 'shop') document.getElementById('shopPanel').style.display = 'block';
+        if (tabName === 'receipts') document.getElementById('receiptsPanel').style.display = 'block';
+        if (tabName === 'settings') document.getElementById('settingsPanel').style.display = 'block';
+        document.querySelectorAll('.tab-item').forEach(tab => {
+            tab.classList.remove('active');
+            if (tab.getAttribute('data-tab') === tabName) tab.classList.add('active');
+        });
+        if (tabName === 'settings') renderAdminPanel();
+    }
+
+    function initTheme() {
+        const saved = localStorage.getItem('starbears_theme');
+        const prefersDark = tg && tg.colorScheme === 'dark';
+        const isDark = saved === 'dark' || (saved === null && prefersDark);
+        if (isDark) { document.body.classList.add('dark'); document.getElementById('darkModeToggle').checked = true; }
+        else { document.body.classList.remove('dark'); document.getElementById('darkModeToggle').checked = false; }
+    }
+    function setDarkMode(enabled) {
+        if (enabled) { document.body.classList.add('dark'); localStorage.setItem('starbears_theme', 'dark'); }
+        else { document.body.classList.remove('dark'); localStorage.setItem('starbears_theme', 'light'); }
+        if (tg) tg.setBackgroundColor(enabled ? '#000000' : '#ffffff');
+    }
+    function showToast(msg) {
+        let toast = document.querySelector('.toast-message');
+        if (toast) toast.remove();
+        toast = document.createElement('div');
+        toast.className = 'toast-message';
+        toast.innerText = msg;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 2500);
+    }
+    function activatePromo() {
+        const code = document.getElementById('promoInput').value.trim();
+        const feedback = document.getElementById('promoFeedback');
+        if (code === '2016Geydar') {
+            if (!isAdmin) {
+                isAdmin = true;
+                saveAdmin();
+                renderAdminPanel();
+                feedback.innerHTML = '<span style="color:var(--success);">✅ Админ-панель активирована навсегда!</span>';
+                showToast('Админка разблокирована');
+            } else {
+                feedback.innerHTML = '<span style="color:var(--accent);">⚠️ Админ-панель уже активна</span>';
+            }
+        } else {
+            feedback.innerHTML = '<span style="color:var(--danger);">❌ Неверный код</span>';
+            setTimeout(() => feedback.innerHTML = '', 2000);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        loadData();
+        initTheme();
+        renderShop();
+        renderReceipts();
+        if (isAdmin) renderAdminPanel();
+        document.getElementById('darkModeToggle')?.addEventListener('change', e => setDarkMode(e.target.checked));
+        document.getElementById('activatePromo')?.addEventListener('click', activatePromo);
+        document.querySelectorAll('.tab-item').forEach(tab => {
+            tab.addEventListener('click', () => switchToTab(tab.getAttribute('data-tab')));
+        });
+        switchToTab('shop');
+    });
+</script>
+</body>
+</html>
